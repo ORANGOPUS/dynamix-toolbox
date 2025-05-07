@@ -64,9 +64,9 @@ A fully featured app will be coming soon! Stay tuned for more updates. In the me
 
 # Support
 
-We're available pretty much 24/7 on our [Guilded](https://go.orangop.us/guilded) so any support queries you can post in the `help` channel!
+We're available pretty much 24/7 on our [Discord](https://opus.ad/discord) so any support queries you can post in the `help` channel!
 
-For our Help Centre: https://help.orangop.us
+For our Help Centre: https://help.orangopus.org
 
 # Contributing to the code
 
