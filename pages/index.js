@@ -1,51 +1,68 @@
-import axios from "axios";
-import config from "../config.json";
 import Head from "next/head";
+import Link from "next/link";
+import Theme from "../components/Theme";
+import { asset } from "../lib/asset";
+import { useConfig } from "../lib/config";
 
-class UserPage extends React.Component {
-  render() {
-    let userData = (
-      <div
-        className="container"
-        style={{
-          fontFamily: config.user.font,
-          background: config.user.background,
-          overflow: 'auto',
-          borderRadius: config.user.corners,
-        }}
-      >
-        <Head>
-          <title>{config.web.title}</title>
-        </Head>
-        <div className="main padfix">
+export default function Portfolio() {
+  const { profile, theme, portfolio } = useConfig();
 
-          <div className="flex">
-          <h1 className="logo" style={{color: config.user.colorSecondary, textTransform: "uppercase", fontSize: config.logo.size}}> <span style={{color: config.user.color, fontSize: config.logo.size2, textTransform: "lowercase", marginRight: 15}}>{config.user.username}</span>{config.logo.portfolio}</h1>
-          </div>
-          <div className="herocont">
-            <div>
-              <img className="avatar" style={{height: config.avatar.size }} src="https://avatars2.githubusercontent.com/u/45247477" />
-              <h1 className="title" style={{ color: config.user.color, fontSize: config.web.titleSize }}>{config.web.title}</h1>
-              <p className="subtitle" style={{color: config.user.colorSecondary, fontSize: config.web.subtitleSize}}>{config.web.subtitle}</p>
-            </div>
-          </div>
-            <div className="showcasecont">
-              <img className="showcase" src="heroimage.png"/>
-     <a href={config.web.link}> 
-      <button className="mainbutton" 
-      style={{color: config.web.mainbutton.color, background: config.web.mainbutton.background 
-      }}><i class="fab fa-dribbble"></i> {config.web.mainbutton.text}</button></a>
-            </div>
+  if (!portfolio.enabled) {
+    return (
+      <Theme theme={theme} className="page center">
+        <Head><title>Dynamix Toolbox</title></Head>
+        <div className="panel-card">
+          <h1>Dynamix Toolbox</h1>
+          <p className="muted">The portfolio page is turned off.</p>
+          <nav className="pill-nav">
+            <Link href="/overlays">Overlays</Link>
+            <Link href="/go">GoDECK</Link>
+            <Link href="/settings">Settings</Link>
+          </nav>
         </div>
-      </div>
+      </Theme>
     );
-
-    if (config.currentScene === "game") {
-      return <body style={{ background: "transparent !important"}}></body>;
-    } else {
-      return userData;
-    }
   }
-}
 
-export default UserPage;
+  return (
+    <Theme theme={theme} className="page portfolio">
+      <Head><title>{portfolio.title}</title></Head>
+      <header className="portfolio-head">
+        <div className="brand">
+          {profile.logo ? <img src={profile.logo} alt="" className="brand-logo" /> : <span className="brand-name">{profile.username}</span>}
+        </div>
+        <nav className="pill-nav">
+          <Link href="/overlays">Overlays</Link>
+          <Link href="/go">GoDECK</Link>
+          <Link href="/settings">Settings</Link>
+        </nav>
+      </header>
+
+      <main className="hero">
+        <section className="hero-text">
+          {profile.avatar && <img className="avatar" src={profile.avatar} alt={profile.name} />}
+          <h1 className="hero-title">{portfolio.title}</h1>
+          <p className="hero-subtitle">{portfolio.subtitle}</p>
+          <div className="hero-actions">
+            {portfolio.button.text && (
+              <a className="button" href={portfolio.button.url || "#"}>{portfolio.button.text}</a>
+            )}
+            {portfolio.links.map((link) => (
+              <a key={link.url + link.label} className="button ghost" href={link.url}>{link.label}</a>
+            ))}
+          </div>
+        </section>
+        <section className="hero-art">
+          <img className="showcase" src={asset("heroimage.png")} alt="" />
+        </section>
+      </main>
+
+      {profile.team.enabled && (
+        <footer className="team">
+          <span className="muted">{profile.team.before}</span> <strong>{profile.team.name}</strong>
+          <p className="muted">{profile.team.desc}</p>
+        </footer>
+      )}
+    </Theme>
+  );
+}

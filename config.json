@@ -1,119 +1,128 @@
 {
-  "user": {
+  "profile": {
+    "name": "xpbsh",
     "username": "xpbsh",
-    "platform": "mixer",
-    "team": false,
-    "logo": "https://i.imgur.com/Xzff1zr.png",
-    "avatar": "https://pbs.twimg.com/profile_images/1347555982776430595/U52gN4MU_400x400.jpg",
-    "font": "Quicksand",
-    "color": "#ffffff",
-    "colorSecondary": "#ffffff",
-    "currentScene": "end",
-    "eventName": "Development",
-    "background": "#212121",
-    "buttonColour": "#212121",
-    "corners": "0px",
-    "backgroundImage": {
-      "url": "",
-      "enabled": true
-    },
-    "cam": false
-  },
-  "avatar": {
-    "size": "80px"
-  },
-  "logo": {
-    "live": "live",
-    "portfolio": "",
-    "size": "53px",
-    "size2": "70px"
-  },
-  "web": {
-    "enabled": false,
-    "title": "Hey, I'm Jordan.",
-    "titleSize": "60px",
-    "subtitle": "I create and design beautiful experiences for humans.",
-    "subtitleSize": "30px",
-    "mainbutton": {
-      "icon": "fa-dribbble",
-      "color": "#282828",
-      "background": "#E84B87",
-      "text": "view my dribbble"
+    "avatar": "https://avatars.githubusercontent.com/u/45247477",
+    "logo": "",
+    "team": {
+      "enabled": true,
+      "before": "We're",
+      "name": "Orangopus",
+      "desc": "An open collective that builds free open-source software for creators."
     }
   },
-  "team": {
-    "enabled": true,
-    "before": "We're ",
-    "name": "Orangopus",
-    "desc": "An open collective that builds free open-source software for creators."
+  "theme": {
+    "accent": "#E84B87",
+    "background": "#212121",
+    "surface": "#1B1D27",
+    "text": "#ffffff",
+    "muted": "#9AA0B4",
+    "font": "Quicksand",
+    "radius": 18,
+    "backgroundImage": ""
   },
-  "discord": {
-    "clientID": " ",
-    "timer": 5
+  "portfolio": {
+    "enabled": true,
+    "title": "Hey, I'm Jordan.",
+    "subtitle": "I create and design beautiful experiences for humans.",
+    "button": {
+      "text": "view my dribbble",
+      "url": "https://dribbble.com"
+    },
+    "links": [
+      {
+        "label": "GitHub",
+        "url": "https://github.com/ORANGOPUS"
+      },
+      {
+        "label": "Website",
+        "url": "https://orangop.us"
+      }
+    ]
+  },
+  "overlay": {
+    "enabled": true,
+    "liveLabel": "live",
+    "currentScene": "end",
+    "currentEvent": "creative-coding-",
+    "transparent": false,
+    "scenes": [
+      {
+        "id": "start",
+        "name": "Starting Soon",
+        "desc": "get ready for some bashing!",
+        "prenup": "Coming up..."
+      },
+      {
+        "id": "brb",
+        "name": "Bash Right Back",
+        "desc": "take 5. grab a snack. stretch your back!",
+        "prenup": "Coming up..."
+      },
+      {
+        "id": "end",
+        "name": "Goodbye",
+        "desc": "the code factory exploded!",
+        "prenup": "Show's over!"
+      }
+    ],
+    "events": [
+      {
+        "id": "creative-coding-",
+        "name": "Creative Coding 🎨👨‍💻",
+        "desc": "Creative Coding is a segment on xpb.sh following xpbsh and his journey of creative and programmatic coding."
+      },
+      {
+        "id": "saturdev-",
+        "name": "Saturdev 👨‍💻",
+        "desc": "Saturday is the day where Cheese develops cool stuff like Streamer.is and Dynamix."
+      },
+      {
+        "id": "sundev-",
+        "name": "Sundev 👨‍💻",
+        "desc": "Sundev is the day where cheese gets to work on finishing up his to-do list and experiments with new projects."
+      }
+    ],
+    "nowPlaying": {
+      "enabled": true,
+      "title": "Drive Time",
+      "artist": "Wynde Up",
+      "art": ""
+    }
   },
   "go": {
-    "player": true,
-    "buttons": 10
-  },
-  "events": [
-    {
-      "name": "Creative Coding 🎨👨‍💻",
-      "desc": "Creative Coding is a segment on xpb.sh following xpbsh and his journey of creative and programmatic coding.",
-      "id": 1
-    },
-    {
-      "name": "Saturdev 👨‍💻",
-      "desc": "Saturday is the day where Cheese develops cool stuff like Streamer.is and Dynamix.",
-      "id": 2
-    },
-    {
-      "name": "Sundev 👨‍💻",
-      "desc": "Sundev is the day where cheese gets to work on finishing up his to-do list and experiments with new projects.",
-      "id": 3
-    }
-  ],
-  "scenes": [
-    {
-      "name": "Starting Soon",
-      "desc": "get ready for some bashing!",
-      "prenup": "Coming up...",
-      "id": "start",
-      "enabled": false
-    },
-    {
-      "name": "Bash Right Back",
-      "desc": "take 5. grab a snack. stretch your back!",
-      "prenup": "Coming up...",
-      "id": "brb",
-      "enabled": false
-    },
-    {
-      "name": "Goodbye",
-      "desc": "the code factory exploded!",
-      "prenup": "Show's over!",
-      "id": "end",
-      "enabled": false
-    },
-    {
-      "id": "game",
-      "enabled": true
-    }
-  ],
-  "tools": [
-    {
-      "name": "Mixer Rich Presence",
-      "desc": "Discord Rich Presence for Mixer!",
-      "enabled": false
-    },
-    {
-      "name": "Pretzel Fetch",
-      "desc": "Fetches the Pretzel song from the txt file and shows it on Touch & Go.",
-      "enabled": true
-    },
-    {
-      "name": "Touch Portal",
-      "desc": "This hook interacts with TouchPortal and dynamically updates buttons on TouchPortal using a special plugin.",
-      "enabled": true
-    }
-  ]
+    "enabled": true,
+    "columns": 4,
+    "showNowPlaying": true,
+    "buttons": [
+      {
+        "id": "b1",
+        "icon": "🎬",
+        "label": "Starting",
+        "url": "",
+        "color": "#E84B87"
+      },
+      {
+        "id": "b2",
+        "icon": "☕",
+        "label": "Be right back",
+        "url": "",
+        "color": "#FFB224"
+      },
+      {
+        "id": "b3",
+        "icon": "👋",
+        "label": "Ending",
+        "url": "",
+        "color": "#38BDF8"
+      },
+      {
+        "id": "b4",
+        "icon": "🎵",
+        "label": "Music",
+        "url": "https://www.pretzel.rocks",
+        "color": "#5EE6D0"
+      }
+    ]
+  }
 }

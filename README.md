@@ -6,22 +6,17 @@ Coded with 🧡 by [🐙](https://orangop.us)
 
 <a href="https://www.producthunt.com/posts/dynamix-toolbox?utm_source=badge-featured&utm_medium=badge&utm_souce=badge-dynamix-toolbox" target="_blank"><img src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=281386&theme=dark" alt="Dynamix Toolbox - A self-hosted sandbox to boost your workflow. | Product Hunt" style="width: 250px; height: 54px;" width="250" height="54" /></a>
 
-## Pre-requisites:
-- [Nodejs](https://nodejs.org)
-
 ## Features
 - Dynamix Overlays (/overlays)
 - GoDECK (/go)
 - Dynamix Portfolio (/)
-- Easily configurable config file
-- Built on NextJS and React
+- Settings panel (/settings) with themes, live preview and shareable links
+- Runs anywhere static: built on Next.js and React, hosted on GitHub Pages
 
 ## Planned Features
 - Dynamically updated buttons
-- UI frontend
 - Razer Chroma Integration
 - Libby Integration
-- Settings Panel
 - Schedules / Events
 - Discord Rich Presence
 - TouchPortal Integration
@@ -32,35 +27,37 @@ Coded with 🧡 by [🐙](https://orangop.us)
 > A lot of things, more things than you would wanna know.
 
 ## UI Preview
-The UI is coming very very soon. 
 
 <img style="border-radius: 25px;" src="/images/preview.gif"/>
 
-## Access the endpoints
-  
-  > If you're on mobile then go to http://`YOUR_LOCAL_IP`:3000/
+## Use it
 
-## Change the config.json
+Dynamix is a static site, hosted on GitHub Pages: **https://docs.orangop.us/dynamix-toolbox/**
 
-There's a bunch of configs in the config so play around and have fun! 
+| Page | What it's for |
+| --- | --- |
+| `/` | Portfolio |
+| `/overlays/` | 1920×1080 stream overlay for an OBS browser source. Add `?scene=brb` to pin one scene. |
+| `/go/` | GoDECK: scene switcher and buttons for a phone or tablet |
+| `/settings/` | Edit everything: profile, theme, scenes, events, now playing, GoDECK buttons |
 
-## Platforms
+Settings save in your browser as you type, and other Dynamix pages open in the same browser update live. To use your settings somewhere else, such as OBS or another device, use **Share & backup** in settings. Each link carries the whole config. Tip: add `/go/` or `/settings/` as an OBS custom browser dock; it shares storage with OBS browser sources, so the overlay should follow along.
 
-We're working on integrating Glimesh after it launches.
+## Make your config the default
 
-## API Routes
-
-API documentation coming soon.
+Export `config.json` from settings, commit it over the one in this repo, and push. The site rebuilds with it as everyone's default.
 
 # Get Started
 
 ## Dev environment
 
-> 
+```sh
+npm install
+npm run dev        # http://localhost:3001
+npm run build      # static site in out/
+```
 
-## Full-stack Web App
-
-A fully featured app will be coming soon! Stay tuned for more updates. In the meantime you can follow  @[Orangopus](https://twitter.com/Orangopus) on Twitter for updates and watch the livestreams.
+Pushes to `master` deploy to GitHub Pages through `.github/workflows/pages.yml`.
 
 # Support
 

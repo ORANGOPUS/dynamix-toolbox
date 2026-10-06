@@ -1,135 +1,65 @@
-import axios from "axios";
+// GoDECK: a touch-friendly deck for a phone or tablet beside the stream.
+// Scene buttons switch the overlay open in this browser (or in OBS, when the
+// deck runs as an OBS custom dock).
 import Head from "next/head";
-import Player from "../components/Player";
-import config from "../config.json";
-import styled from "@emotion/styled";
+import Link from "next/link";
+import NowPlaying from "../components/NowPlaying";
+import Theme from "../components/Theme";
+import { saveConfig, useConfig, isShared } from "../lib/config";
+import { GAME_SCENE, setIn } from "../lib/schema";
 
-const API = "http://localhost:3000/api";
+export default function Go() {
+  const config = useConfig();
+  const { theme, overlay, go } = config;
+  const scenes = [...overlay.scenes, { id: GAME_SCENE, name: "Game" }];
+  const switchTo = (id) => !isShared() && saveConfig(setIn(config, "overlay.currentScene", id));
 
-class Go extends React.Component {
-  static getInitialProps = async ctx => {
-    let username = config.user.username;
+  return (
+    <Theme theme={theme} className="page deck">
+      <Head><title>GoDECK</title></Head>
+      <header className="deck-head">
+        <h1>GoDECK</h1>
+        <Link className="button ghost small" href="/settings">Settings</Link>
+      </header>
 
-    const _CHANNELS = "https://mixer.com/api/v1/channels";
-
-    const res = await axios(`${_CHANNELS}/${username}`);
-
-    return {
-      mixer: res.data
-    };
-  };
-
-  render() {
-    let mixer = this.props.mixer;
-
-    // Event Checker
-
-    let id;
-    let scene = config.user.currentScene;
-
-    if (scene === "start") {
-      id = 0;
-    } else if (scene === "brb") {
-      id = 1;
-    } else if (scene === "end") {
-      id = 2;
-    } else {
-      id = 3;
-      return null;
-    }
-
-    let eventname = mixer.type.name;
-
-    let findScene = config.scenes.find(item => item.id === config.currentScene);
-
-    let sceneChecker = config.user.background;
-
-    if (config.currentScene === "game") {
-      sceneChecker = "transparent !important";
-    } else {
-      sceneChecker;
-    }
-
-    let userData = (
-      <div
-        className="container"
-        style={{
-          fontFamily: config.user.font,
-          background: sceneChecker,
-          borderRadius: config.user.corners
-        }}
-      >
-        <div style={{ padding: "20px" }}>
-          <div className="flex">
-            <div className="item">
-              <img className="itemimg" src={mixer.type.coverUrl} />
+      {!go.enabled ? (
+        <p className="muted">GoDECK is turned off in settings.</p>
+      ) : (
+        <>
+          <section>
+            <h2 className="deck-label">Scene</h2>
+            <div className="scene-row">
+              {scenes.map((scene) => (
+                <button
+                  key={scene.id}
+                  className={`scene-button ${overlay.currentScene === scene.id ? "active" : ""}`}
+                  onClick={() => switchTo(scene.id)}
+                >
+                  {scene.name}
+                </button>
+              ))}
             </div>
-            <div className="item">
-              <h1
-                style={{
-                  textAlign: "center",
-                  color: config.user.color
-                }}
-              >
-                {mixer.numFollowers.toLocaleString("en-GB")}
-              </h1>
-              <p
-                style={{
-                  textAlign: "center",
-                  fontSize: 14
-                }}
-              >
-                followers
-              </p>
-            </div>
-            <div className="item">
-              <h1
-                style={{
-                  color: config.user.color,
-                  textAlign: "center"
-                }}
-              >
-                {mixer.viewersCurrent.toLocaleString("en-GB")}
-              </h1>
-              <p
-                style={{
-                  textAlign: "center",
-                  fontSize: 14
-                }}
-              >
-                viewers
-              </p>
-            </div>
-            <div className="item"></div>
-            <div className="item"></div>
-          </div>
-          <div>
-            <p style={{ padding: 20, width: 400, color: "grey" }}>
-              Please note that Touch &amp; Go is an experimental feature. Things
-              MAY break and data isn't dynamically brought in... yet!
-              <br />
-              <br />
-              Change up the colors in the{" "}
-              <span style={{ color: config.user.color }}>config.json</span> file
-            </p>
-          </div>
-          <Player />
-          <div className="chat">
-            <iframe
-              className="chat"
-              src={`https://mixer.com/embed/chat/${mixer.token}`}
-            ></iframe>
-          </div>
-        </div>
-      </div>
-    );
+          </section>
 
-    if (config.currentScene === "game") {
-      return <body style={{ background: "transparent !important" }}></body>;
-    } else {
-      return userData;
-    }
-  }
+          <section className="deck-grid" style={{ gridTemplateColumns: `repeat(${go.columns}, 1fr)` }}>
+            {go.buttons.map((button) => (
+              <a
+                key={button.id}
+                className="deck-button"
+                style={{ "--button": button.color }}
+                href={button.url || undefined}
+                target={button.url ? "_blank" : undefined}
+                rel="noreferrer"
+              >
+                <span className="deck-icon">{button.icon}</span>
+                <span className="deck-text">{button.label}</span>
+              </a>
+            ))}
+          </section>
+
+          {go.showNowPlaying && <NowPlaying track={overlay.nowPlaying} />}
+        </>
+      )}
+    </Theme>
+  );
 }
-
-export default Go;
