@@ -9,8 +9,9 @@ import FontPicker, { FontPreviewSheet, PAIRINGS } from "../components/FontPicker
 import Theme from "../components/Theme";
 import { BUILT_IN, isShared, loadConfig, resetConfig, saveConfig, shareLink } from "../lib/config";
 import { FONTS, findFont } from "../lib/fonts";
+import { useDesktopTrack } from "../lib/desktop";
 import { addToLibrary, loadLibrary, removeFromLibrary } from "../lib/library";
-import { BUTTON_ACTIONS, GAME_SCENE, PLATFORMS, THEME_PRESETS, getIn, normalize, setIn } from "../lib/schema";
+import { BUTTON_ACTIONS, GAME_SCENE, MEDIA_CONTROLS, PLATFORMS, THEME_PRESETS, getIn, normalize, setIn } from "../lib/schema";
 
 const TABS = [
   ["look", "🎨", "Look"],
@@ -33,6 +34,18 @@ const TAB_PREVIEW = { portfolio: "portfolio", go: "go", overlay: "overlay", prof
 
 // Theme keys a preset sets; editing one by hand makes the theme "Custom".
 const PRESET_KEYS = new Set(Object.keys(THEME_PRESETS.Midnight));
+
+const BRIDGE_INSTALL =
+  "mkdir -p ~/.local/bin && curl -fsSL https://raw.githubusercontent.com/ORANGOPUS/dynamix-toolbox/master/tools/dynamix-bridge -o ~/.local/bin/dynamix-bridge && chmod +x ~/.local/bin/dynamix-bridge";
+const BRIDGE_AUTOSTART = 'o.launch_on_start("dynamix-bridge")';
+
+function bridgeStatus(desktop, url) {
+  if (desktop.status === "connecting") return ["pending", "Connecting to the bridge…"];
+  if (desktop.status === "offline") return ["offline", `Can't reach the bridge at ${url}. Until it's running, the song typed in below shows.`];
+  const track = desktop.track;
+  if (!track) return ["online", "Connected · nothing is playing right now"];
+  return ["online", `Connected · ${track.player}: ${track.title}${track.artist ? ` by ${track.artist}` : ""} (${track.status.toLowerCase()})`];
+}
 
 const pick = (list) => list[Math.floor(Math.random() * list.length)];
 
@@ -87,6 +100,7 @@ export default function Settings() {
   const [json, setJson] = useState("");
   const [jsonError, setJsonError] = useState("");
   const fileInput = useRef(null);
+  const desktop = useDesktopTrack(config.overlay.nowPlaying);
 
   useEffect(() => {
     // A share link opened here becomes this browser's config, then the hash goes.
@@ -444,10 +458,37 @@ export default function Settings() {
             <button type="button" className="button ghost small" onClick={() => set("overlay.countdown.target", "")}>Clear</button>
           </div>
         </Section>
-        <Section title="Now playing">
+        <Section title="Now playing" description="Type the song in, or follow whatever plays on your Linux desktop (Spotify, mpv, browsers…) through the Dynamix bridge.">
           <Toggle label="Show the song" checked={overlay.nowPlaying.enabled} onChange={(v) => set("overlay.nowPlaying.enabled", v)} />
+          <Segmented label="Song comes from" value={overlay.nowPlaying.source} options={[["manual", "Typed in"], ["desktop", "Desktop (Hyprland)"]]} onChange={(v) => set("overlay.nowPlaying.source", v)} />
+          {overlay.nowPlaying.source === "desktop" && (() => {
+            const [state, text] = bridgeStatus(desktop, overlay.nowPlaying.bridgeUrl);
+            return (
+              <div className="bridge">
+                <p className={`bridge-status ${state}`} aria-live="polite"><span className="bridge-dot" />{text}</p>
+                <div className="toggle-row">
+                  <Toggle label="Hide when paused" checked={overlay.nowPlaying.hideWhenPaused} onChange={(v) => set("overlay.nowPlaying.hideWhenPaused", v)} />
+                  <Toggle label="Progress bar" checked={overlay.nowPlaying.showProgress} onChange={(v) => set("overlay.nowPlaying.showProgress", v)} />
+                </div>
+                <Field label="Bridge address"><TextInput value={overlay.nowPlaying.bridgeUrl} onChange={(v) => set("overlay.nowPlaying.bridgeUrl", v)} /></Field>
+                {state !== "online" && (
+                  <ol className="bridge-steps">
+                    <li>
+                      Install the bridge (Python 3 and systemd's busctl, nothing else):
+                      <span className="command"><code>{BRIDGE_INSTALL}</code><CopyButton text={() => BRIDGE_INSTALL}>Copy</CopyButton></span>
+                    </li>
+                    <li>
+                      Start it with Hyprland: on Omarchy add this to <code>~/.config/hypr/autostart.lua</code> (or <code>exec-once = dynamix-bridge</code> in <code>hyprland.conf</code>):
+                      <span className="command"><code>{BRIDGE_AUTOSTART}</code><CopyButton text={() => BRIDGE_AUTOSTART}>Copy</CopyButton></span>
+                    </li>
+                    <li>Run <code>dynamix-bridge &amp;</code> once to start it now. This page connects by itself.</li>
+                  </ol>
+                )}
+              </div>
+            );
+          })()}
           <div className="grid-2">
-            <Field label="Title"><TextInput value={overlay.nowPlaying.title} onChange={(v) => set("overlay.nowPlaying.title", v)} /></Field>
+            <Field label={overlay.nowPlaying.source === "desktop" ? "Fallback title" : "Title"}><TextInput value={overlay.nowPlaying.title} onChange={(v) => set("overlay.nowPlaying.title", v)} /></Field>
             <Field label="Artist"><TextInput value={overlay.nowPlaying.artist} onChange={(v) => set("overlay.nowPlaying.artist", v)} /></Field>
             <Field label="Album art URL"><TextInput value={overlay.nowPlaying.art} onChange={(v) => set("overlay.nowPlaying.art", v)} /></Field>
             <Select label="Corner" value={overlay.nowPlaying.position} options={[["bottom-left", "Bottom left"], ["bottom-right", "Bottom right"], ["top-left", "Top left"], ["top-right", "Top right"]]} onChange={(v) => set("overlay.nowPlaying.position", v)} />
@@ -510,6 +551,7 @@ export default function Settings() {
               { key: "value", label: "Scene", type: "select", options: sceneOptions, show: (b) => b.action === "scene" },
               { key: "value", label: "Event", type: "select", options: eventOptions, show: (b) => b.action === "event" },
               { key: "value", label: "Minutes", show: (b) => b.action === "countdown" },
+              { key: "value", label: "Music", type: "select", options: Object.entries(MEDIA_CONTROLS), show: (b) => b.action === "media" },
             ]}
             onChange={(buttons) => set("go.buttons", buttons)}
             make={(n) => ({ id: `b${n + 1}-${Date.now().toString(36)}`, icon: "⭐", label: "New button", url: "", color: theme.accent, action: "url", value: "" })}

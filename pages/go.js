@@ -9,10 +9,17 @@ import Theme from "../components/Theme";
 import { Countdown } from "../components/Widgets";
 import { isShared, saveConfig, useConfig } from "../lib/config";
 import { applyAction, isActive } from "../lib/actions";
+import { resolveTrack, sendMediaControl, useDesktopTrack } from "../lib/desktop";
+import { useState } from "react";
 import { GAME_SCENE, setIn } from "../lib/schema";
 
 export default function Go() {
   const config = useConfig();
+  const desktop = useDesktopTrack(config.overlay.nowPlaying);
+  // The deck keeps the card (and its controls) while paused, whatever the overlay does.
+  const track = resolveTrack({ ...config.overlay.nowPlaying, hideWhenPaused: false }, desktop);
+  const [mediaError, setMediaError] = useState("");
+  const media = async (action) => setMediaError(await sendMediaControl(config.overlay.nowPlaying.bridgeUrl, action));
   const { theme, overlay, go } = config;
   const shared = typeof window !== "undefined" && isShared();
   const apply = (next) => next && !shared && saveConfig(next);
@@ -77,12 +84,28 @@ export default function Go() {
               return button.action === "url" ? (
                 <a key={`${button.id}-${index}`} {...props} href={button.value || undefined} target="_blank" rel="noreferrer">{content}</a>
               ) : (
-                <button key={`${button.id}-${index}`} {...props} type="button" onClick={() => apply(applyAction(config, button))}>{content}</button>
+                <button key={`${button.id}-${index}`} {...props} type="button" onClick={() => (button.action === "media" ? media(button.value) : apply(applyAction(config, button)))}>{content}</button>
               );
             })}
           </section>
 
-          {go.showNowPlaying && <NowPlaying track={overlay.nowPlaying} className="enter" />}
+          {go.showNowPlaying && (
+            <NowPlaying
+              track={track}
+              showProgress={overlay.nowPlaying.showProgress}
+              className="enter deck-nowplaying"
+              controls={
+                track.live && (
+                  <div className="media-controls">
+                    <button type="button" onClick={() => media("previous")} aria-label="Previous track">⏮</button>
+                    <button type="button" className="primary" onClick={() => media("play-pause")} aria-label={track.playing ? "Pause" : "Play"}>{track.playing ? "⏸" : "▶"}</button>
+                    <button type="button" onClick={() => media("next")} aria-label="Next track">⏭</button>
+                  </div>
+                )
+              }
+            />
+          )}
+          {mediaError && <p className="notice card small">{mediaError}. Is dynamix-bridge running?</p>}
         </>
       )}
     </Theme>

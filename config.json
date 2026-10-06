@@ -139,6 +139,10 @@
     ],
     "nowPlaying": {
       "enabled": true,
+      "source": "manual",
+      "bridgeUrl": "http://127.0.0.1:7768",
+      "hideWhenPaused": false,
+      "showProgress": true,
       "title": "Drive Time",
       "artist": "Wynde Up",
       "art": "",
@@ -229,6 +233,22 @@
       },
       {
         "id": "b8",
+        "icon": "⏯️",
+        "label": "Play / pause",
+        "color": "#22D3EE",
+        "action": "media",
+        "value": "play-pause"
+      },
+      {
+        "id": "b9",
+        "icon": "⏭️",
+        "label": "Next track",
+        "color": "#38BDF8",
+        "action": "media",
+        "value": "next"
+      },
+      {
+        "id": "b10",
         "icon": "🥨",
         "label": "Pretzel",
         "color": "#F97316",

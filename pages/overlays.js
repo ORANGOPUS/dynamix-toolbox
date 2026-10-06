@@ -6,6 +6,7 @@ import NowPlaying from "../components/NowPlaying";
 import Theme from "../components/Theme";
 import { Clock, Countdown, Socials, Ticker } from "../components/Widgets";
 import { useConfig } from "../lib/config";
+import { resolveTrack, useDesktopTrack } from "../lib/desktop";
 import { GAME_SCENE } from "../lib/schema";
 
 function useSceneParam() {
@@ -31,6 +32,8 @@ function useStageFit() {
 
 export default function Overlay() {
   const { profile, theme, overlay } = useConfig();
+  const desktop = useDesktopTrack(overlay.nowPlaying);
+  const track = resolveTrack(overlay.nowPlaying, desktop);
   const pinned = useSceneParam();
   const fit = useStageFit();
   const sceneId = pinned ?? overlay.currentScene;
@@ -92,7 +95,7 @@ export default function Overlay() {
           )}
 
           <div className={`corner corner-${overlay.nowPlaying.position}`}>
-            <NowPlaying track={overlay.nowPlaying} className="enter" />
+            <NowPlaying track={track} showProgress={overlay.nowPlaying.showProgress} className="enter" />
           </div>
           {overlay.clock.enabled && (
             <div className={`corner corner-${overlay.nowPlaying.position === "top-right" ? "top-left" : "top-right"}`}>

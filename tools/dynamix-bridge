@@ -1,0 +1,293 @@
+#!/usr/bin/env python3
+"""Dynamix desktop bridge: what's playing on your Linux desktop, for Dynamix.
+
+Reads the active MPRIS media player (Spotify, mpv, browsers, ...) over D-Bus
+with busctl and serves it on 127.0.0.1 for the Dynamix pages:
+
+  GET  /nowplaying          the current track as JSON
+  GET  /events              the same, as a server-sent event stream
+  GET  /art                 the current album art, when the player gives a file
+  POST /control/<action>    play-pause, play, pause, next or previous
+
+Only pages from allowed origins can read it (Dynamix on GitHub Pages and
+localhost by default), so other websites can't see what you listen to.
+Needs only Python 3 and systemd's busctl. Start it with your session, e.g. in
+Hyprland: o.launch_on_start("dynamix-bridge").
+"""
+import argparse
+import base64
+import hashlib
+import json
+import mimetypes
+import os
+import re
+import subprocess
+import threading
+import time
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from urllib.parse import unquote, urlparse
+
+MPRIS_PATH = "/org/mpris/MediaPlayer2"
+PLAYER_IFACE = "org.mpris.MediaPlayer2.Player"
+CONTROLS = {"play-pause": "PlayPause", "play": "Play", "pause": "Pause", "next": "Next", "previous": "Previous"}
+DEFAULT_ORIGINS = [
+    "https://orangopus.github.io",
+    r"re:^https?://(localhost|127\.0\.0\.1)(:\d+)?$",
+]
+
+
+def busctl(*args, timeout=2):
+    result = subprocess.run(["busctl", "--user", "--json=short", *args], capture_output=True, text=True, timeout=timeout)
+    if result.returncode != 0:
+        raise RuntimeError(result.stderr.strip())
+    return result.stdout
+
+
+def players():
+    names = [entry["name"] for entry in json.loads(busctl("list")) if entry["name"].startswith("org.mpris.MediaPlayer2.")]
+    return sorted(set(names))
+
+
+def prop(name, interface, key):
+    return json.loads(busctl("get-property", name, MPRIS_PATH, interface, key))["data"]
+
+
+def unwrap(value):
+    return value["data"] if isinstance(value, dict) and "data" in value else value
+
+
+def read_player(name):
+    metadata = {key: unwrap(value) for key, value in prop(name, PLAYER_IFACE, "Metadata").items()}
+    status = prop(name, PLAYER_IFACE, "PlaybackStatus")
+    try:
+        position = prop(name, PLAYER_IFACE, "Position")
+    except Exception:
+        position = 0
+    try:
+        identity = prop(name, "org.mpris.MediaPlayer2", "Identity")
+    except Exception:
+        identity = name.removeprefix("org.mpris.MediaPlayer2.").split(".")[0]
+    artist = metadata.get("xesam:artist") or []
+    return {
+        "player": identity,
+        "bus": name,
+        "status": status,
+        "title": metadata.get("xesam:title") or "",
+        "artist": ", ".join(artist) if isinstance(artist, list) else str(artist),
+        "album": metadata.get("xesam:album") or "",
+        "artUrl": metadata.get("mpris:artUrl") or "",
+        "length": int(metadata.get("mpris:length") or 0) // 1000,
+        "position": int(position or 0) // 1000,
+    }
+
+
+class State:
+    """The track shown, polled from D-Bus, with waiters for changes."""
+
+    def __init__(self, prefer):
+        self.prefer = [p.lower() for p in prefer]
+        self.track = None
+        self.version = 0
+        self.art = None  # (key, source) of art /art serves: a file path or data: URI
+        self.last_bus = None
+        self.changed = threading.Condition()
+
+    def choose(self, tracks):
+        if not tracks:
+            return None
+        def rank(t):
+            preferred = any(p in t["bus"].lower() or p in t["player"].lower() for p in self.prefer)
+            return (t["status"] == "Playing", preferred, t["bus"] == self.last_bus, bool(t["title"]))
+        return max(tracks, key=rank)
+
+    def poll(self):
+        tracks = []
+        for name in players():
+            try:
+                tracks.append(read_player(name))
+            except Exception:
+                pass
+        track = self.choose(tracks)
+        if track:
+            self.last_bus = track["bus"]
+            art = track.pop("artUrl")
+            if art.startswith(("file://", "data:image/")):
+                # Served from /art: pages can't read local files, and data URIs are big.
+                key = hashlib.sha1(art.encode()).hexdigest()[:12]
+                self.art = (key, unquote(urlparse(art).path) if art.startswith("file://") else art)
+                track["art"] = f"/art?k={key}"
+            else:
+                self.art = None
+                track["art"] = art if art.startswith(("http://", "https://")) else ""
+            track["at"] = int(time.time() * 1000)
+        self.update(track)
+
+    def update(self, track):
+        with self.changed:
+            old = self.track
+            if not self.differs(old, track):
+                return
+            self.track = track
+            self.version += 1
+            self.changed.notify_all()
+
+    @staticmethod
+    def differs(old, new):
+        if (old is None) != (new is None):
+            return True
+        if old is None:
+            return False
+        keys = ("bus", "status", "title", "artist", "album", "art", "length")
+        if any(old[k] != new[k] for k in keys):
+            return True
+        # A seek: the position moved more than playback explains.
+        expected = old["position"] + (new["at"] - old["at"] if old["status"] == "Playing" else 0)
+        return abs(new["position"] - expected) > 2000
+
+    def snapshot(self):
+        return {"connected": True, "track": self.track}
+
+    def run(self, interval):
+        while True:
+            try:
+                self.poll()
+            except Exception as error:
+                print(f"dynamix-bridge: {error}", flush=True)
+            time.sleep(interval)
+
+
+def make_handler(state, origins):
+    def allowed(origin):
+        for rule in origins:
+            if rule == "*" or rule == origin or (rule.startswith("re:") and origin and re.match(rule[3:], origin)):
+                return True
+        return False
+
+    class Handler(BaseHTTPRequestHandler):
+        protocol_version = "HTTP/1.1"
+
+        def log_message(self, *args):
+            pass
+
+        def cors(self):
+            origin = self.headers.get("Origin")
+            if origin and allowed(origin):
+                self.send_header("Access-Control-Allow-Origin", origin)
+                self.send_header("Vary", "Origin")
+                self.send_header("Access-Control-Allow-Private-Network", "true")
+            return origin is None or allowed(origin)
+
+        def reply(self, code, body=b"", kind="application/json"):
+            self.send_response(code)
+            self.cors()
+            self.send_header("Content-Type", kind)
+            self.send_header("Content-Length", str(len(body)))
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            self.wfile.write(body)
+
+        def refuse_origin(self):
+            origin = self.headers.get("Origin")
+            if origin and not allowed(origin):
+                self.reply(403, b'{"error":"origin not allowed"}')
+                return True
+            return False
+
+        def do_OPTIONS(self):
+            self.send_response(204)
+            self.cors()
+            self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+            self.send_header("Access-Control-Allow-Headers", "Content-Type")
+            self.send_header("Access-Control-Max-Age", "600")
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+
+        def do_GET(self):
+            if self.refuse_origin():
+                return
+            path = urlparse(self.path).path
+            if path == "/nowplaying":
+                self.reply(200, json.dumps(state.snapshot()).encode())
+            elif path == "/events":
+                self.stream()
+            elif path == "/art":
+                self.art()
+            elif path == "/":
+                self.reply(200, b"Dynamix desktop bridge is running.\n", "text/plain")
+            else:
+                self.reply(404, b'{"error":"not found"}')
+
+        def do_POST(self):
+            if self.refuse_origin():
+                return
+            match = re.fullmatch(r"/control/([a-z-]+)", urlparse(self.path).path)
+            track = state.track
+            if not match or match.group(1) not in CONTROLS:
+                return self.reply(404, b'{"error":"unknown control"}')
+            if not track:
+                return self.reply(409, b'{"error":"nothing playing"}')
+            try:
+                busctl("call", track["bus"], MPRIS_PATH, PLAYER_IFACE, CONTROLS[match.group(1)])
+                threading.Timer(0.15, state.poll).start()
+                self.reply(200, b'{"ok":true}')
+            except Exception as error:
+                self.reply(502, json.dumps({"error": str(error)}).encode())
+
+        def art(self):
+            if not state.art:
+                return self.reply(404, b'{"error":"no art"}')
+            source = state.art[1]
+            if source.startswith("data:"):
+                header, _, data = source.partition(",")
+                kind = header[5:].split(";")[0] or "image/jpeg"
+                body = base64.b64decode(data) if ";base64" in header else unquote(data).encode()
+                return self.reply(200, body, kind)
+            if not os.path.isfile(source):
+                return self.reply(404, b'{"error":"no art"}')
+            with open(source, "rb") as file:
+                body = file.read(10_000_000)
+            self.reply(200, body, mimetypes.guess_type(source)[0] or "image/jpeg")
+
+        def stream(self):
+            self.send_response(200)
+            self.cors()
+            self.send_header("Content-Type", "text/event-stream")
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            seen = -1
+            try:
+                while True:
+                    with state.changed:
+                        if state.version == seen:
+                            state.changed.wait(timeout=15)
+                        version, body = state.version, json.dumps(state.snapshot())
+                    if version != seen:
+                        self.wfile.write(f"data: {body}\n\n".encode())
+                        seen = version
+                    else:
+                        self.wfile.write(b": keep-alive\n\n")
+                    self.wfile.flush()
+            except (BrokenPipeError, ConnectionResetError):
+                pass
+
+    return Handler
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Serve your desktop's now playing to Dynamix.")
+    parser.add_argument("--port", type=int, default=int(os.environ.get("DYNAMIX_BRIDGE_PORT", 7768)))
+    parser.add_argument("--allow-origin", action="append", default=[], help="another site allowed to read it (repeatable; * for any)")
+    parser.add_argument("--prefer", action="append", default=[], help="player to prefer when several are playing, e.g. spotify")
+    parser.add_argument("--interval", type=float, default=1.0, help="seconds between D-Bus polls")
+    args = parser.parse_args()
+
+    state = State(args.prefer)
+    threading.Thread(target=state.run, args=(args.interval,), daemon=True).start()
+    server = ThreadingHTTPServer(("127.0.0.1", args.port), make_handler(state, DEFAULT_ORIGINS + args.allow_origin))
+    server.daemon_threads = True
+    print(f"dynamix-bridge: http://127.0.0.1:{args.port}", flush=True)
+    server.serve_forever()
+
+
+if __name__ == "__main__":
+    main()

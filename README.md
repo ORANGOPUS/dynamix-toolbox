@@ -8,7 +8,8 @@ Coded with 🧡 by [🐙](https://orangop.us)
 
 ## Features
 - **Overlays** (/overlays): four layouts (classic, centred, minimal, lower third), scenes and events, a countdown, clock, now playing card, socials bar and scrolling ticker
-- **GoDECK** (/go): a touch deck whose buttons switch scenes and events, start countdowns, toggle the music card and ticker, or open links
+- **GoDECK** (/go): a touch deck whose buttons switch scenes and events, start countdowns, toggle the music card and ticker, control your desktop's music, or open links
+- **Desktop music**: the now-playing card follows Spotify, mpv or any MPRIS player on Hyprland and other Linux desktops, via a tiny local bridge
 - **Portfolio** (/): three layouts, about section, projects grid, socials and team
 - **Customise** (/settings), a studio with a live preview:
   - 113 Google Fonts with a searchable browser, 16 one-click pairings, weights, case, spacing and text size
@@ -45,6 +46,20 @@ Dynamix is a static site, hosted on GitHub Pages: **https://orangopus.github.io/
 | `/settings/` | Customise everything, with a live preview |
 
 Settings save in your browser as you type, and other Dynamix pages open in the same browser update live. To use your settings somewhere else, such as OBS or another device, use **Share & backup** in settings. Each link carries the whole config. Tip: add `/go/` or `/settings/` as an OBS custom browser dock; it shares storage with OBS browser sources, so the overlay should follow along.
+
+## Show your desktop's music (Hyprland and other Linux desktops)
+
+The now-playing card can follow whatever plays on your computer: Spotify, mpv, a browser tab, anything that speaks MPRIS. `tools/dynamix-bridge` reads it over D-Bus and serves it on `127.0.0.1:7768`. It needs only Python 3 and systemd's `busctl`.
+
+```sh
+mkdir -p ~/.local/bin
+curl -fsSL https://raw.githubusercontent.com/ORANGOPUS/dynamix-toolbox/master/tools/dynamix-bridge -o ~/.local/bin/dynamix-bridge
+chmod +x ~/.local/bin/dynamix-bridge
+```
+
+Start it with Hyprland. On Omarchy, add `o.launch_on_start("dynamix-bridge")` to `~/.config/hypr/autostart.lua`; with a classic config, add `exec-once = dynamix-bridge` to `hyprland.conf`. Then, in **Customise → Overlay → Now playing**, choose **Desktop (Hyprland)**. You get the track, album art and a progress bar, and GoDECK gets play/pause/next buttons. If the bridge isn't running, the typed-in song shows instead.
+
+Only Dynamix on GitHub Pages and `localhost` can read the bridge, so other sites can't see what you're playing. Hosting Dynamix elsewhere? Run `dynamix-bridge --allow-origin https://your.site`. With several players open, `--prefer spotify` picks one.
 
 ## Make your config the default
 
