@@ -7,14 +7,17 @@ Coded with 🧡 by [🐙](https://orangop.us)
 <a href="https://www.producthunt.com/posts/dynamix-toolbox?utm_source=badge-featured&utm_medium=badge&utm_souce=badge-dynamix-toolbox" target="_blank"><img src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=281386&theme=dark" alt="Dynamix Toolbox - A self-hosted sandbox to boost your workflow. | Product Hunt" style="width: 250px; height: 54px;" width="250" height="54" /></a>
 
 ## Features
-- Dynamix Overlays (/overlays)
-- GoDECK (/go)
-- Dynamix Portfolio (/)
-- Settings panel (/settings) with themes, live preview and shareable links
+- **Overlays** (/overlays): four layouts (classic, centred, minimal, lower third), scenes and events, a countdown, clock, now playing card, socials bar and scrolling ticker
+- **GoDECK** (/go): a touch deck whose buttons switch scenes and events, start countdowns, toggle the music card and ticker, or open links
+- **Portfolio** (/): three layouts, about section, projects grid, socials and team
+- **Customise** (/settings), a studio with a live preview:
+  - 113 Google Fonts with a searchable browser, 16 one-click pairings, weights, case, spacing and text size
+  - 15 theme presets plus "Surprise me", six colours, solid/gradient/aurora/image backgrounds and dot/grid/line/noise patterns
+  - Five card styles (solid, glass, outline, neon, flat), radius, borders, shadows and entrance animations
+  - Undo/redo, saved setups, share links, JSON import/export and custom CSS
 - Runs anywhere static: built on Next.js and React, hosted on GitHub Pages
 
 ## Planned Features
-- Dynamically updated buttons
 - Razer Chroma Integration
 - Libby Integration
 - Schedules / Events
@@ -39,7 +42,7 @@ Dynamix is a static site, hosted on GitHub Pages: **https://orangopus.github.io/
 | `/` | Portfolio |
 | `/overlays/` | 1920×1080 stream overlay for an OBS browser source. Add `?scene=brb` to pin one scene. |
 | `/go/` | GoDECK: scene switcher and buttons for a phone or tablet |
-| `/settings/` | Edit everything: profile, theme, scenes, events, now playing, GoDECK buttons |
+| `/settings/` | Customise everything, with a live preview |
 
 Settings save in your browser as you type, and other Dynamix pages open in the same browser update live. To use your settings somewhere else, such as OBS or another device, use **Share & backup** in settings. Each link carries the whole config. Tip: add `/go/` or `/settings/` as an OBS custom browser dock; it shares storage with OBS browser sources, so the overlay should follow along.
 

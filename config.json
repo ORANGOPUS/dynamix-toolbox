@@ -1,7 +1,8 @@
 {
   "profile": {
-    "name": "xpbsh",
+    "name": "Jordan",
     "username": "xpbsh",
+    "tagline": "Creative coder & streamer",
     "avatar": "https://avatars.githubusercontent.com/u/45247477",
     "logo": "",
     "team": {
@@ -9,24 +10,64 @@
       "before": "We're",
       "name": "Orangopus",
       "desc": "An open collective that builds free open-source software for creators."
-    }
+    },
+    "socials": [
+      {
+        "platform": "twitch",
+        "handle": "xpbsh",
+        "url": ""
+      },
+      {
+        "platform": "github",
+        "handle": "ORANGOPUS",
+        "url": ""
+      },
+      {
+        "platform": "discord",
+        "handle": "orangopus",
+        "url": "https://opus.ad/discord"
+      }
+    ]
   },
   "theme": {
+    "preset": "Midnight",
     "accent": "#E84B87",
-    "background": "#212121",
+    "accent2": "#7C5CFF",
+    "background": "#111218",
     "surface": "#1B1D27",
-    "text": "#ffffff",
+    "text": "#F4F5FA",
     "muted": "#9AA0B4",
-    "font": "Quicksand",
+    "headingFont": "Quicksand",
+    "bodyFont": "Quicksand",
+    "cardStyle": "solid",
+    "backgroundType": "solid",
+    "pattern": "none",
+    "headingWeight": 700,
+    "bodyWeight": 500,
+    "headingTransform": "none",
+    "headingSpacing": 0,
+    "fontScale": 100,
     "radius": 18,
-    "backgroundImage": ""
+    "borderWidth": 0,
+    "shadow": 40,
+    "gradientAngle": 135,
+    "backgroundImage": "",
+    "backgroundDim": 40,
+    "patternOpacity": 20,
+    "animation": "rise",
+    "customCss": ""
   },
   "portfolio": {
     "enabled": true,
+    "layout": "split",
     "title": "Hey, I'm Jordan.",
     "subtitle": "I create and design beautiful experiences for humans.",
+    "about": "",
+    "showAvatar": true,
+    "showSocials": true,
+    "heroImage": "heroimage.png",
     "button": {
-      "text": "view my dribbble",
+      "text": "View my Dribbble",
       "url": "https://dribbble.com"
     },
     "links": [
@@ -36,28 +77,41 @@
       },
       {
         "label": "Website",
-        "url": "https://orangop.us"
+        "url": "https://orangopus.github.io"
       }
-    ]
+    ],
+    "projects": [
+      {
+        "title": "Dynamix Toolbox",
+        "desc": "Overlays, a stream deck and this page, all from one config.",
+        "image": "",
+        "url": "https://github.com/ORANGOPUS/dynamix-toolbox"
+      }
+    ],
+    "footer": ""
   },
   "overlay": {
     "enabled": true,
-    "liveLabel": "live",
-    "currentScene": "end",
-    "currentEvent": "creative-coding-",
+    "layout": "classic",
     "transparent": false,
+    "liveLabel": "live",
+    "currentScene": "start",
+    "currentEvent": "creative",
+    "showLogo": true,
+    "showSceneInfo": true,
+    "showEvent": true,
     "scenes": [
       {
         "id": "start",
         "name": "Starting Soon",
         "desc": "get ready for some bashing!",
-        "prenup": "Coming up..."
+        "prenup": "Coming up…"
       },
       {
         "id": "brb",
         "name": "Bash Right Back",
         "desc": "take 5. grab a snack. stretch your back!",
-        "prenup": "Coming up..."
+        "prenup": "Coming up…"
       },
       {
         "id": "end",
@@ -68,17 +122,17 @@
     ],
     "events": [
       {
-        "id": "creative-coding-",
+        "id": "creative",
         "name": "Creative Coding 🎨👨‍💻",
         "desc": "Creative Coding is a segment on xpb.sh following xpbsh and his journey of creative and programmatic coding."
       },
       {
-        "id": "saturdev-",
+        "id": "saturdev",
         "name": "Saturdev 👨‍💻",
         "desc": "Saturday is the day where Cheese develops cool stuff like Streamer.is and Dynamix."
       },
       {
-        "id": "sundev-",
+        "id": "sundev",
         "name": "Sundev 👨‍💻",
         "desc": "Sundev is the day where cheese gets to work on finishing up his to-do list and experiments with new projects."
       }
@@ -87,41 +141,99 @@
       "enabled": true,
       "title": "Drive Time",
       "artist": "Wynde Up",
-      "art": ""
+      "art": "",
+      "position": "bottom-left"
+    },
+    "countdown": {
+      "enabled": true,
+      "label": "Starting in",
+      "target": ""
+    },
+    "clock": {
+      "enabled": false,
+      "hour24": true
+    },
+    "socials": {
+      "enabled": true
+    },
+    "ticker": {
+      "enabled": false,
+      "text": "Welcome in! Grab a drink, say hi in chat, and don't forget to follow ✨",
+      "speed": 40
     }
   },
   "go": {
     "enabled": true,
     "columns": 4,
+    "buttonStyle": "tinted",
+    "showLabels": true,
+    "showSceneRow": true,
+    "showEventRow": false,
     "showNowPlaying": true,
     "buttons": [
       {
         "id": "b1",
         "icon": "🎬",
         "label": "Starting",
-        "url": "",
-        "color": "#E84B87"
+        "color": "#E84B87",
+        "action": "scene",
+        "value": "start"
       },
       {
         "id": "b2",
         "icon": "☕",
         "label": "Be right back",
-        "url": "",
-        "color": "#FFB224"
+        "color": "#FFB224",
+        "action": "scene",
+        "value": "brb"
       },
       {
         "id": "b3",
-        "icon": "👋",
-        "label": "Ending",
-        "url": "",
-        "color": "#38BDF8"
+        "icon": "🎮",
+        "label": "Game",
+        "color": "#22C55E",
+        "action": "scene",
+        "value": "game"
       },
       {
         "id": "b4",
+        "icon": "👋",
+        "label": "Ending",
+        "color": "#38BDF8",
+        "action": "scene",
+        "value": "end"
+      },
+      {
+        "id": "b5",
+        "icon": "⏱️",
+        "label": "5 min timer",
+        "color": "#A78BFA",
+        "action": "countdown",
+        "value": "5"
+      },
+      {
+        "id": "b6",
         "icon": "🎵",
-        "label": "Music",
-        "url": "https://www.pretzel.rocks",
-        "color": "#5EE6D0"
+        "label": "Music card",
+        "color": "#5EE6D0",
+        "action": "nowplaying",
+        "value": ""
+      },
+      {
+        "id": "b7",
+        "icon": "📣",
+        "label": "Ticker",
+        "color": "#FF7A45",
+        "action": "ticker",
+        "value": ""
+      },
+      {
+        "id": "b8",
+        "icon": "🥨",
+        "label": "Pretzel",
+        "color": "#F97316",
+        "action": "url",
+        "value": "https://www.pretzel.rocks"
       }
     ]
   }

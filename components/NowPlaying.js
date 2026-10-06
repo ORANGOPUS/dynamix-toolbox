@@ -3,7 +3,7 @@ import { asset } from "../lib/asset";
 export default function NowPlaying({ track, className = "" }) {
   if (!track.enabled || !track.title) return null;
   return (
-    <div className={`nowplaying ${className}`}>
+    <div className={`nowplaying card ${className}`}>
       <img className="nowplaying-art" src={track.art || asset("pretzel.png")} alt="" />
       <div>
         <div className="nowplaying-label">Now playing</div>
