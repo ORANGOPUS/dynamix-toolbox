@@ -32,7 +32,7 @@ Coded with 🧡 by [🐙](https://orangop.us)
 
 ## Use it
 
-Dynamix is a static site, hosted on GitHub Pages: **https://docs.orangop.us/dynamix-toolbox/**
+Dynamix is a static site, hosted on GitHub Pages: **https://orangopus.github.io/dynamix-toolbox/**
 
 | Page | What it's for |
 | --- | --- |
