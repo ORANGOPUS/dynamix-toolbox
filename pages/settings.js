@@ -37,11 +37,12 @@ const PRESET_KEYS = new Set(Object.keys(THEME_PRESETS.Midnight));
 
 const BRIDGE_INSTALL =
   "mkdir -p ~/.local/bin && curl -fsSL https://raw.githubusercontent.com/ORANGOPUS/dynamix-toolbox/master/tools/dynamix-bridge -o ~/.local/bin/dynamix-bridge && chmod +x ~/.local/bin/dynamix-bridge";
+const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 const BRIDGE_AUTOSTART = 'o.launch_on_start("dynamix-bridge")';
 
 function bridgeStatus(desktop, url) {
   if (desktop.status === "connecting") return ["pending", "Connecting to the bridge…"];
-  if (desktop.status === "offline") return ["offline", `Can't reach the bridge at ${url}. Until it's running, the song typed in below shows.`];
+  if (desktop.status === "offline") return ["offline", `Can't reach the bridge at ${url}: it isn't running, or the browser blocked it (see below). Until then, the song typed in below shows.`];
   const track = desktop.track;
   if (!track) return ["online", "Connected · nothing is playing right now"];
   return ["online", `Connected · ${track.player}: ${track.title}${track.artist ? ` by ${track.artist}` : ""} (${track.status.toLowerCase()})`];
@@ -471,6 +472,14 @@ export default function Settings() {
                   <Toggle label="Progress bar" checked={overlay.nowPlaying.showProgress} onChange={(v) => set("overlay.nowPlaying.showProgress", v)} />
                 </div>
                 <Field label="Bridge address"><TextInput value={overlay.nowPlaying.bridgeUrl} onChange={(v) => set("overlay.nowPlaying.bridgeUrl", v)} /></Field>
+                <p className="muted small">
+                  Browsers ask before a website may talk to apps on your computer. If yours asks to let this site access other apps
+                  or devices, choose Allow. OBS can't show that question, so give OBS the overlay through the bridge instead:
+                </p>
+                <div className="button-row">
+                  <CopyButton text={() => shareLink(`${overlay.nowPlaying.bridgeUrl.replace(/\/$/, "")}${BASE_PATH}/overlays/`, config)}>Copy OBS overlay link</CopyButton>
+                  <CopyButton text={() => shareLink(`${overlay.nowPlaying.bridgeUrl.replace(/\/$/, "")}${BASE_PATH}/go/`, config)}>Copy GoDECK link (via bridge)</CopyButton>
+                </div>
                 {state !== "online" && (
                   <ol className="bridge-steps">
                     <li>

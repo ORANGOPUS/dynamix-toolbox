@@ -59,6 +59,8 @@ chmod +x ~/.local/bin/dynamix-bridge
 
 Start it with Hyprland. On Omarchy, add `o.launch_on_start("dynamix-bridge")` to `~/.config/hypr/autostart.lua`; with a classic config, add `exec-once = dynamix-bridge` to `hyprland.conf`. Then, in **Customise → Overlay → Now playing**, choose **Desktop (Hyprland)**. You get the track, album art and a progress bar, and GoDECK gets play/pause/next buttons. If the bridge isn't running, the typed-in song shows instead.
 
+Browsers ask before a website may talk to apps on your computer, so allow it when asked. OBS can't show that question: give OBS the overlay *through the bridge* instead. The bridge also serves Dynamix at `http://127.0.0.1:7768/dynamix-toolbox/`, and settings has a **Copy OBS overlay link** button for it.
+
 Only Dynamix on GitHub Pages and `localhost` can read the bridge, so other sites can't see what you're playing. Hosting Dynamix elsewhere? Run `dynamix-bridge --allow-origin https://your.site`. With several players open, `--prefer spotify` picks one.
 
 ## Make your config the default

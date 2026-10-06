@@ -8,6 +8,9 @@ with busctl and serves it on 127.0.0.1 for the Dynamix pages:
   GET  /events              the same, as a server-sent event stream
   GET  /art                 the current album art, when the player gives a file
   POST /control/<action>    play-pause, play, pause, next or previous
+  GET  /dynamix-toolbox/...  the Dynamix site itself, relayed from GitHub Pages,
+                            for OBS: a page on the bridge's own address needs no
+                            browser permission to reach it
 
 Only pages from allowed origins can read it (Dynamix on GitHub Pages and
 localhost by default), so other websites can't see what you listen to.
@@ -25,7 +28,9 @@ import subprocess
 import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from urllib.error import HTTPError
 from urllib.parse import unquote, urlparse
+from urllib.request import Request, urlopen
 
 MPRIS_PATH = "/org/mpris/MediaPlayer2"
 PLAYER_IFACE = "org.mpris.MediaPlayer2.Player"
@@ -156,7 +161,10 @@ class State:
             time.sleep(interval)
 
 
-def make_handler(state, origins):
+def make_handler(state, origins, site):
+    site_url = urlparse(site.rstrip("/"))
+    site_prefix = site_url.path  # e.g. /dynamix-toolbox
+
     def allowed(origin):
         for rule in origins:
             if rule == "*" or rule == origin or (rule.startswith("re:") and origin and re.match(rule[3:], origin)):
@@ -213,7 +221,12 @@ def make_handler(state, origins):
             elif path == "/art":
                 self.art()
             elif path == "/":
-                self.reply(200, b"Dynamix desktop bridge is running.\n", "text/plain")
+                self.send_response(302)
+                self.send_header("Location", f"{site_prefix}/")
+                self.send_header("Content-Length", "0")
+                self.end_headers()
+            elif site_prefix and (path == site_prefix or path.startswith(site_prefix + "/")):
+                self.relay()
             else:
                 self.reply(404, b'{"error":"not found"}')
 
@@ -232,6 +245,18 @@ def make_handler(state, origins):
                 self.reply(200, b'{"ok":true}')
             except Exception as error:
                 self.reply(502, json.dumps({"error": str(error)}).encode())
+
+        def relay(self):
+            """Pass a request for the Dynamix site through to where it's hosted."""
+            target = f"{site_url.scheme}://{site_url.netloc}{self.path}"
+            try:
+                with urlopen(Request(target, headers={"User-Agent": "dynamix-bridge"}), timeout=15) as response:
+                    body, kind, code = response.read(), response.headers.get("Content-Type", "application/octet-stream"), response.status
+            except HTTPError as error:
+                body, kind, code = error.read(), error.headers.get("Content-Type", "text/plain"), error.code
+            except Exception as error:
+                return self.reply(502, f"Couldn't fetch {target}: {error}\n".encode(), "text/plain")
+            self.reply(code, body, kind)
 
         def art(self):
             if not state.art:
@@ -279,11 +304,12 @@ def main():
     parser.add_argument("--allow-origin", action="append", default=[], help="another site allowed to read it (repeatable; * for any)")
     parser.add_argument("--prefer", action="append", default=[], help="player to prefer when several are playing, e.g. spotify")
     parser.add_argument("--interval", type=float, default=1.0, help="seconds between D-Bus polls")
+    parser.add_argument("--site", default="https://orangopus.github.io/dynamix-toolbox", help="where Dynamix is hosted, relayed under its path")
     args = parser.parse_args()
 
     state = State(args.prefer)
     threading.Thread(target=state.run, args=(args.interval,), daemon=True).start()
-    server = ThreadingHTTPServer(("127.0.0.1", args.port), make_handler(state, DEFAULT_ORIGINS + args.allow_origin))
+    server = ThreadingHTTPServer(("127.0.0.1", args.port), make_handler(state, DEFAULT_ORIGINS + args.allow_origin, args.site))
     server.daemon_threads = True
     print(f"dynamix-bridge: http://127.0.0.1:{args.port}", flush=True)
     server.serve_forever()
